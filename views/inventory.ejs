@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .header {
+          background-color: #fff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          padding: 1rem;
+          margin-bottom: 2rem;
+        }
+  
+        .header-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+        }
+  
+        .home-link {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #333;
+        }
+  
+        .logo {
+          height: 40px;
+          margin-right: 10px;
+        }
+  
+        .home-link span {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+    </style>  
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="header-content">
+        <a href="/home/index.html" class="home-link">
+          <img src="/home/pos/images/logo.png" alt="POS Logo" class="logo">
+          <span>POS</span>
+        </a>
+      </div>
+    </div>
+    
+    <div class="container">
+        <h1>Inventory</h1> 
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Price (₹)</th>
+                    <th>Quantity</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (items.length > 0) { %>
+                    <% items.forEach((item, index) => { %>
+                        <tr>
+                            <td><%= index + 1 %></td>
+                            <td><%= item.name %></td>
+                            <td>₹<%= item.price.toFixed(2) %></td>
+                            <td><%= item.quantity %></td>
+                            <td>
+                                <a href="/pos/inventory/edit-item/<%= item._id %>" class="btn">Edit</a>
+                                <a href="/pos/inventory/delete-item/<%= item._id %>" class="btn btn-danger">Delete</a>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="5">No items found in inventory.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+        <br>
+        <hr>
+        <br>
+        <span><a href="/pos/inventory/add-item">Add New Item</a></span>
+        <br>
+        <br>
+        <span><a href="/pos">Back to POS</a></span>
+        <br>
+        
+    </div>
+
+
+</body>
+</html>

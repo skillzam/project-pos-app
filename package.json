@@ -1,0 +1,22 @@
+{
+  "name": "pos-app",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "connect-flash": "^0.1.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "html-pdf": "^3.0.1",
+    "mongoose": "^8.13.2",
+    "nodemon": "^3.1.9",
+    "passport": "^0.7.0"
+  }
+}

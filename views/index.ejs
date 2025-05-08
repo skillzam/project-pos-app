@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Point of Sale</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+      .header {
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .header-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+      }
+
+      .home-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: #333;
+      }
+
+      .logo {
+        height: 40px;
+        margin-right: 10px;
+      }
+
+      .home-link span {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="header-content">
+        <a href="/home/index.html" class="home-link">
+          <img src="/home/pos/images/logo.png" alt="POS Logo" class="logo">
+          <span>POS</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="container">
+      <h1>Point of Sale System</h1>
+      <form id="pos-form" onsubmit="event.preventDefault(); addItem();">
+        <label for="item">Select Item:</label>
+        <select id="item" required onchange="updatePriceAndTotal()">
+          <% items.forEach(item => { %>
+          <option value="<%= item.name %>" data-price="<%= item.price %>">
+            <%= item.name %> - ₹<%= item.price %>
+          </option>
+          <% }) %>
+        </select>
+
+        <label for="quantity">Quantity:</label>
+        <input
+          type="number"
+          id="quantity"
+          value="1"
+          min="1"
+          required
+          oninput="updateTotal()"
+        />
+
+        <label for="price">Price (₹):</label>
+        <input type="number" id="price" step="0.01" required readonly />
+
+        <label for="discount">Discount (₹):</label>
+        <input
+          type="number"
+          id="discount"
+          step="0.01"
+          value="0"
+          oninput="updateTotal()"
+        />
+
+        <label for="total">Total Amount (₹):</label>
+        <input type="number" id="total" step="0.01" readonly />
+
+        <button type="submit">Add Item</button>
+      </form>
+
+      <label for="tax">GST (%) :</label>
+      <input
+        type="number"
+        id="tax"
+        value="18"
+        step="0.01"
+        oninput="recalculateGrandTotal()"
+      />
+
+      <!-- Printable Section -->
+      <div id="invoice-section">
+        <h2>Invoice Item Table</h2>
+        <table id="invoice-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item</th>
+              <th>Price (₹)</th>
+              <th>Qty</th>
+              <th>Discount (₹)</th>
+              <th>Total (₹)</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody id="invoice-body">
+            <!-- Dynamic rows go here -->
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="right-align">Subtotal (₹):</td>
+              <td id="subtotal">0.00</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="5" class="right-align">
+                GST (<span id="gst-rate">Tax</span>):
+              </td>
+              <td id="gst-amount">0.00</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colspan="5" class="right-align">
+                <strong>Total (₹):</strong>
+              </td>
+              <td id="grand-total">0.00</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <button onclick="downloadPDF()">Download Invoice (PDF)</button>
+      <hr>
+      <br>
+      <span><a href="/pos/inventory">View Inventory</a></span>
+      <br>
+    </div>
+
+    <div id="btmargin"></div>
+
+    <script>
+      let itemCount = 0;
+      let items = [];
+
+      function updatePriceAndTotal() {
+        const itemSelect = document.getElementById("item");
+        const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+        const price = parseFloat(selectedOption.getAttribute("data-price"));
+        document.getElementById("price").value = price.toFixed(2);
+        updateTotal();
+      }
+
+      function updateTotal() {
+        const price = parseFloat(document.getElementById("price").value) || 0;
+        const quantity =
+          parseInt(document.getElementById("quantity").value) || 0;
+        const discount =
+          parseFloat(document.getElementById("discount").value) || 0;
+        let total = price * quantity - discount;
+        if (total < 0) total = 0;
+        document.getElementById("total").value = total.toFixed(2);
+      }
+
+      function addItem() {
+        const itemName = document.getElementById("item").value;
+        const price = parseFloat(document.getElementById("price").value) || 0;
+        const quantity =
+          parseInt(document.getElementById("quantity").value) || 0;
+        const discount =
+          parseFloat(document.getElementById("discount").value) || 0;
+        const total = parseFloat(document.getElementById("total").value) || 0;
+
+        if (quantity <= 0 || price <= 0) return;
+
+        items.push({ itemName, price, quantity, discount, total });
+
+        renderInvoice();
+
+        // Reset form fields
+        document.getElementById("quantity").value = 1;
+        document.getElementById("discount").value = 0;
+        updatePriceAndTotal();
+      }
+
+      function removeItem(index) {
+        items.splice(index, 1);
+        renderInvoice();
+      }
+
+      function renderInvoice() {
+        const tbody = document.getElementById("invoice-body");
+        tbody.innerHTML = "";
+        let subtotal = 0;
+
+        items.forEach((item, index) => {
+          subtotal += item.total;
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.itemName}</td>
+                <td>${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>${item.discount.toFixed(2)}</td>
+                <td>${item.total.toFixed(2)}</td>
+                <td><button class="remove-btn" onclick="removeItem(${index})">X</button></td>
+            `;
+          tbody.appendChild(row);
+        });
+
+        const taxRate = parseFloat(document.getElementById("tax").value) || 0;
+        const gst = (subtotal * taxRate) / 100;
+        const grandTotal = subtotal + gst;
+
+        document.getElementById("subtotal").textContent = subtotal.toFixed(2);
+        document.getElementById("gst-amount").textContent = gst.toFixed(2);
+        document.getElementById("grand-total").textContent =
+          grandTotal.toFixed(2);
+        // document.getElementById("gst-rate").textContent = taxRate.toFixed(2);
+        document.getElementById("gst-rate").textContent = 'Tax';
+      }
+
+      function recalculateGrandTotal() {
+        renderInvoice();
+      }
+
+      async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const companyName = "K. N. Builders"; // <-- Customize your company name
+        const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
+        const date = new Date();
+        const formattedDate = date.toLocaleString();
+        const place = "Belagavi ( Karnataka )";
+
+        // Company Header
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text(`INVOICE`, 105, 15, { align: "center" });
+        doc.text(`${companyName}`, 105, 25, { align: "center" });
+
+        // Adding a horizontal line
+        doc.setLineWidth(0.25); // Set the line thickness
+        doc.line(10, 35, 200, 35); // Draw a line from point (10, 25) to (200, 25)
+
+        // Invoice Details
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Invoice No: ${invoiceNumber}`, 14, 50);
+        doc.text(`Date: ${formattedDate}`, 14, 60);
+        doc.text(`Place: ${place}`, 14, 65); // Added place here
+
+        // Table headers
+        const headers = [
+          ["#", "Item", "Price (INR)", "Qty", "Discount (INR)", "Total (INR)"],
+        ];
+
+        // Table rows
+        const rows = items.map((item, index) => [
+          index + 1,
+          item.itemName,
+          item.price.toFixed(2),
+          item.quantity,
+          item.discount.toFixed(2),
+          item.total.toFixed(2),
+        ]);
+
+        // Add the table
+        doc.autoTable({
+          startY: 75,
+          head: headers,
+          body: rows,
+          theme: "grid",
+          headStyles: { fillColor: [41, 128, 185] },
+          styles: { fontSize: 10 },
+          margin: { top: 40 },
+        });
+
+        // Totals
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const taxRate = parseFloat(document.getElementById("tax").value) || 0;
+        const gst = (subtotal * taxRate) / 100;
+        const grandTotal = subtotal + gst;
+
+        let finalY = doc.autoTable.previous.finalY + 10;
+
+        doc.setFontSize(10);
+        doc.text(`Subtotal (INR): ${subtotal.toFixed(2)}`, 150, finalY);
+        doc.text(`GST (Tax)      : ${gst.toFixed(2)}`, 150, finalY + 6);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Total (INR)    : ${grandTotal.toFixed(2)}`, 150, finalY + 12);
+
+        // Footer notes and signature
+        let footerY = finalY + 90;
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.text("Note: Thank you for your business!", 14, footerY);
+
+        doc.text("Authorized Signature:", 150, footerY);
+        doc.line(150, footerY + 2, 190, footerY + 2); // signature line
+
+        doc.text(`For any queries regarding Invoice, Please call +91 9876543210`, 105, 290, { align: "center" });
+
+        // Save the PDF
+        doc.save(`invoice_${invoiceNumber}.pdf`);
+      }
+
+      window.onload = updatePriceAndTotal;
+    </script>
+
+  </body>
+</html>    

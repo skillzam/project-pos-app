@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Item</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>    
+    <style>
+        .header {
+          background-color: #fff;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          padding: 1rem;
+          margin-bottom: 2rem;
+        }
+  
+        .header-content {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+        }
+  
+        .home-link {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
+          color: #333;
+        }
+  
+        .logo {
+          height: 40px;
+          margin-right: 10px;
+        }
+  
+        .home-link span {
+          font-size: 1.5rem;
+          font-weight: bold;
+        }
+    </style>
+  </head>
+  <body>
+
+    <div class="header">
+      <div class="header-content">
+        <a href="/home/index.html" class="home-link">
+          <img src="/home/pos/images/logo.png" alt="POS Logo" class="logo">
+          <span>POS</span>
+        </a>
+      </div>
+    </div>
+    
+    <div class="container">
+        <h1>Add New Item</h1>
+        <form action="/pos/inventory/add-item" method="POST">
+            <label for="name">Item Name:</label>
+            <input type="text" name="name" id="name" required>
+
+            <label for="price">Price (₹):</label>
+            <input type="number" name="price" id="price" step="0.01" required>
+
+            <label for="quantity">Quantity:</label>
+            <input type="number" name="quantity" id="quantity" required>
+
+            <button type="submit">Add Item</button>
+        </form>
+        
+        <br>
+        <hr>
+        <br>
+        <span><a href="/pos/inventory">Back to Inventory</a></span>
+        <br>
+    </div>
+</body>
+</html>

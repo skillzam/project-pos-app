@@ -1,0 +1,153 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f4f4f9;
+}
+
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding-bottom: 50px;
+}
+
+#btmargin {
+  height: 100px;
+}
+
+h1 {
+  text-align: center;
+  color: #333;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+input,
+select,
+button {
+  margin-top: 5px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  background-color: #0a58ca;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #3d72c0;
+}
+
+table {
+  margin-top: 20px;
+  border-collapse: collapse;
+  width: 100%;
+}
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: center;
+}
+.right-align {
+  text-align: right;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+}
+button.remove-btn {
+  color: red;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-weight: bold;
+}
+#invoice-section {
+  background: #fff;
+  padding: 20px;
+  color: #000;
+}
+#invoice-section {
+  background: #fff;
+  padding: 1px;
+  color: #000;
+  width: 100%;
+  overflow-x: auto;
+}
+
+#invoice-section table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+#invoice-section th,
+#invoice-section td {
+  border: 1px solid #999;
+  padding: 6px;
+  font-size: 12px;
+  word-wrap: break-word;
+}
+
+#invoice-section h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+/* inventory css */
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.inventory-table th,
+.inventory-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.inventory-table th {
+  background-color: #f4f4f9;
+  font-weight: bold;
+}
+
+.inventory-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.inventory-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.btn {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: #28a745;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-right: 5px;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+}

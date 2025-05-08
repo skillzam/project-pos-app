@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Point of Sale</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    table {
+      margin-top: 20px;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    .right-align {
+      text-align: right;
+    }
+    .actions button {
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Point of Sale System</h1>
+
+    <form id="pos-form" onsubmit="event.preventDefault(); addItem();">
+      <label for="item">Select Item:</label>
+      <select id="item" required onchange="updatePriceAndTotal()">
+        <% items.forEach(item => { %>
+          <option value="<%= item.name %>" data-price="<%= item.price %>">
+            <%= item.name %> - ₹<%= item.price %>
+          </option>
+        <% }) %>
+      </select>
+
+      <label for="quantity">Quantity:</label>
+      <input type="number" id="quantity" value="1" min="1" required oninput="updateTotal()" />
+
+      <label for="price">Price (₹):</label>
+      <input type="number" id="price" step="0.01" required readonly />
+
+      <label for="discount">Discount (₹):</label>
+      <input type="number" id="discount" step="0.01" value="0" oninput="updateTotal()" />
+
+      <label for="total">Total Amount (₹):</label>
+      <input type="number" id="total" step="0.01" readonly />
+
+      <button type="submit">Add Item</button>
+    </form>
+
+    <div class="controls">
+      <label for="tax">GST/Tax %:</label>
+      <input type="number" id="tax" value="0" min="0" step="0.01" oninput="updateTax()" />
+    </div>
+
+    <h2>Invoice</h2>
+    <div id="invoice-section">
+      <table id="invoice-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Item</th>
+            <th>Price (₹)</th>
+            <th>Qty</th>
+            <th>Discount (₹)</th>
+            <th>Total (₹)</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="invoice-body">
+          <!-- Items go here -->
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="5" class="right-align"><strong>Sub Total (₹):</strong></td>
+            <td colspan="2" id="grand-total">0.00</td>
+          </tr>
+          <tr>
+            <td colspan="5" class="right-align"><strong>Tax (₹):</strong></td>
+            <td colspan="2" id="tax-amount">0.00</td>
+          </tr>
+          <tr>
+            <td colspan="5" class="right-align"><strong>Final Total (₹):</strong></td>
+            <td colspan="2" id="final-total">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="controls">
+      <button onclick="downloadPDF()">Download Invoice PDF</button>
+      <button onclick="submitInvoice()">Submit Invoice</button>
+    </div>
+  </div>
+
+  <!-- Include html2pdf.js via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <script>
+    let itemCount = 0;
+    let grandTotal = 0;
+    let invoiceItems = [];
+
+    function updatePriceAndTotal() {
+      const itemSelect = document.getElementById("item");
+      const selectedOption = itemSelect.options[itemSelect.selectedIndex];
+      const price = parseFloat(selectedOption.getAttribute("data-price")) || 0;
+      document.getElementById("price").value = price.toFixed(2);
+      updateTotal();
+    }
+
+    function updateTotal() {
+      const price = parseFloat(document.getElementById("price").value) || 0;
+      const quantity = parseInt(document.getElementById("quantity").value) || 1;
+      const discount = parseFloat(document.getElementById("discount").value) || 0;
+      let total = (price * quantity) - discount;
+      if (total < 0) total = 0;
+      document.getElementById("total").value = total.toFixed(2);
+    }
+
+    function updateInvoiceTable() {
+      const tbody = document.getElementById("invoice-body");
+      tbody.innerHTML = "";
+      grandTotal = 0;
+
+      invoiceItems.forEach((item, index) => {
+        grandTotal += item.total;
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.name}</td>
+          <td>${item.price.toFixed(2)}</td>
+          <td>${item.quantity}</td>
+          <td>${item.discount.toFixed(2)}</td>
+          <td>${item.total.toFixed(2)}</td>
+          <td class="actions"><button onclick="removeItem(${index})">Remove</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("grand-total").textContent = grandTotal.toFixed(2);
+      updateTax();
+    }
+
+    function updateTax() {
+      const taxPercent = parseFloat(document.getElementById("tax").value) || 0;
+      const taxAmount = grandTotal * (taxPercent / 100);
+      const finalTotal = grandTotal + taxAmount;
+
+      document.getElementById("tax-amount").textContent = taxAmount.toFixed(2);
+      document.getElementById("final-total").textContent = finalTotal.toFixed(2);
+    }
+
+    function addItem() {
+      const itemName = document.getElementById("item").value;
+      const price = parseFloat(document.getElementById("price").value) || 0;
+      const quantity = parseInt(document.getElementById("quantity").value) || 1;
+      const discount = parseFloat(document.getElementById("discount").value) || 0;
+      const total = parseFloat(document.getElementById("total").value) || 0;
+
+      if (quantity <= 0 || price <= 0) return;
+
+      invoiceItems.push({ name: itemName, price, quantity, discount, total });
+      updateInvoiceTable();
+
+      // Reset form
+      document.getElementById("quantity").value = 1;
+      document.getElementById("discount").value = 0;
+      updatePriceAndTotal();
+    }
+
+    function removeItem(index) {
+      invoiceItems.splice(index, 1);
+      updateInvoiceTable();
+    }
+
+    function downloadPDF() {
+      const invoiceElement = document.getElementById("invoice-section");
+      const opt = {
+        margin: 0.5,
+        filename: 'invoice.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+      html2pdf().set(opt).from(invoiceElement).save();
+    }
+
+    function submitInvoice() {
+      const tax = parseFloat(document.getElementById("tax").value) || 0;
+      const taxAmount = parseFloat(document.getElementById("tax-amount").textContent) || 0;
+      const finalTotal = parseFloat(document.getElementById("final-total").textContent) || 0;
+
+      const data = {
+        items: invoiceItems,
+        subTotal: grandTotal.toFixed(2),
+        tax: tax.toFixed(2),
+        taxAmount: taxAmount.toFixed(2),
+        finalTotal: finalTotal.toFixed(2)
+      };
+
+      fetch('/api/invoice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(response => {
+        alert("Invoice submitted successfully!");
+        console.log(response);
+      })
+      .catch(error => {
+        console.error("Error submitting invoice:", error);
+        alert("Failed to submit invoice.");
+      });
+    }
+
+    // Initialize on load
+    window.onload = updatePriceAndTotal;
+  </script>
+</body>
+</html>
